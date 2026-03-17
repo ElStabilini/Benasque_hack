@@ -1,0 +1,29 @@
+[project]
+name = "Benasque_hack"
+version = "0.0.1"
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib",
+    "mitiq>=0.49.0",
+    "numpy",
+    "ply>=3.11",
+    "qiskit",
+    "qiskit-aer",
+    "qiskit-ibm-runtime>=0.45.1",
+    "qiskit-nature-pyscf>=0.4.0",
+    "scienceplots>=2.2.1",
+    "scipy",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit>=4.3.0",
+    "ruff>=0.12.12",
+]
+
+[tool.uv]
+package = false
+
+[tool.setuptools]
+packages = []
+py-modules = []
