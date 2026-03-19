@@ -1,12 +1,17 @@
 import itertools
+import json
+import logging
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
-from qiskit.primitives import StatevectorSampler
-from qiskit_algorithms.minimum_eigensolvers import QAOA, NumPyMinimumEigensolver
-from qiskit_algorithms.optimizers import COBYLA
+from qiskit import QuantumCircuit
+from qiskit.circuit import ParameterVector
+from qiskit.primitives import BackendSamplerV2
 from qiskit_optimization import QuadraticProgram
-from qiskit_optimization.algorithms import MinimumEigenOptimizer
+
+log = logging.getLogger(__name__)
+GEAR_LEVEL = {"Urban": 0, "Trail": 1, "Mountain": 2, "Snow": 3}
 
 
 def default_locations():
@@ -85,9 +90,10 @@ def default_problem_data():
     }
 
 
-def gear_required(loc_id, locations, gear_level, season="summer"):
-    col = 3 if season == "summer" else 4
-    return gear_level[locations[loc_id][col]]
+def gear_required(loc_id: int, season: str = "summer") -> int:
+    """Return the numeric gear level required to visit a location."""
+    col = 3 if season == "summer" else 4  # index into the tuple
+    return GEAR_LEVEL[default_locations()[loc_id][col]]
 
 
 def altitude(loc_id, locations):
@@ -109,25 +115,26 @@ def make_distance_fn(travel_time, pois, base_camp=0):
     return distance
 
 
-def build_qubo(data):
-    locations = data["locations"]
-    base_altitude = data["base_altitude"]
-    base_camp = data["base_camp"]
-    gear_level = data["gear_level"]
-    pois = data["pois"]
-    scenic = data["scenic"]
-    season = data["season"]
-    user_gear = data["user_gear"]
-    travel_time = data["travel_time"]
-    visit_time = data["visit_time"]
-    n_slots = data["n_slots"]
-
-    penalties = data["penalties"]
+def build_qubo(
+    locations,
+    base_altitude,
+    base_camp,
+    gear_level,
+    pois,
+    scenic,
+    season,
+    user_gear,
+    travel_time,
+    visit_time,
+    n_slots,
+    penalties,
+):
     A = penalties["A"]
     B = penalties["B"]
     C = penalties["C"]
     D = penalties["D"]
     E = penalties["E"]
+    F = penalties["F"]
     t_max = penalties["T_MAX"]
     t_max_refugio = penalties["T_MAX_REFUGIO"]
     max_alt_gain = penalties["MAX_ALT_GAIN"]
@@ -144,6 +151,7 @@ def build_qubo(data):
     quadratic = defaultdict(float)
     constant = 0.0
 
+    # Objective: scenic value and travel distances
     for i in pois:
         linear[f"x_{i}_1"] += d(base_camp, i) - scenic[i]
         linear[f"x_{i}_{n_slots}"] += d(i, base_camp) - scenic[i]
@@ -155,6 +163,7 @@ def build_qubo(data):
             for j in pois:
                 quadratic[(f"x_{i}_{p}", f"x_{j}_{q}")] += d(i, j)
 
+    # Penalty A: exactly one POI per slot
     for p in slots:
         constant += A
         for i in pois:
@@ -162,10 +171,12 @@ def build_qubo(data):
         for i, j in itertools.combinations(pois, 2):
             quadratic[(f"x_{i}_{p}", f"x_{j}_{p}")] += 2 * A
 
+    # Penalty B: no POI visited in more than one slot
     for i in pois:
         for p, q in itertools.combinations(slots, 2):
             quadratic[(f"x_{i}_{p}", f"x_{i}_{q}")] += B
 
+    # Penalty C: altitude gain threshold
     for i in pois:
         gain_base_i = max(0.0, altitude(i, locations) - base_altitude)
         excess_base_i = max(0.0, gain_base_i - max_alt_gain)
@@ -179,6 +190,7 @@ def build_qubo(data):
                 for p, q in zip(slots, slots[1:]):
                     quadratic[(f"x_{i}_{p}", f"x_{j}_{q}")] += C * excess_ij**2
 
+    # Penalty D: gear mismatch
     for i in pois:
         required = gear_required(i, locations, gear_level, season=season)
         deficit = max(0, required - user_gear)
@@ -186,6 +198,7 @@ def build_qubo(data):
             for p in slots:
                 linear[f"x_{i}_{p}"] += D * deficit
 
+    # Penalty E: time budget
     for i in pois:
         for j in pois:
             budget = (
@@ -194,58 +207,59 @@ def build_qubo(data):
                 else t_max
             )
             for p, q in zip(slots, slots[1:]):
-                if p == slots[0]:
-                    leg_time = d(base_camp, i) + visit_time[i] + d(i, j)
-                else:
-                    leg_time = visit_time[i] + d(i, j)
+                leg_time = (
+                    d(base_camp, i) + visit_time[i] + d(i, j)
+                    if p == slots[0]
+                    else visit_time[i] + d(i, j)
+                )
                 if q == slots[-1]:
                     leg_time += visit_time[j] + d(j, base_camp)
-
                 excess = max(0.0, leg_time - budget)
                 if excess > 0:
                     quadratic[(f"x_{i}_{p}", f"x_{j}_{q}")] += E * excess**2
+
+    # Penalty F: hard Snow↔Mountain ban (cross-type adjacency)
+    snow_gear = gear_level["Snow"]
+    mount_gear = gear_level["Mountain"]
+    for i in pois:
+        for j in pois:
+            gi = gear_required(i, locations, gear_level, season=season)
+            gj = gear_required(j, locations, gear_level, season=season)
+            if {gi, gj} == {snow_gear, mount_gear}:
+                for p, q in zip(slots, slots[1:]):
+                    quadratic[(f"x_{i}_{p}", f"x_{j}_{q}")] += F
 
     qp.minimize(constant=constant, linear=dict(linear), quadratic=dict(quadratic))
     return qp
 
 
-def solve_exact_and_qaoa(qp, reps=2, maxiter=300):
-    sampler = StatevectorSampler()
-    exact_result = MinimumEigenOptimizer(NumPyMinimumEigensolver()).solve(qp)
-    qaoa_result = MinimumEigenOptimizer(
-        QAOA(sampler=sampler, optimizer=COBYLA(maxiter=maxiter), reps=reps)
-    ).solve(qp)
-    return exact_result, qaoa_result
+def create_hea_ansatz(num_qubits, layers):
+    qc = QuantumCircuit(num_qubits)
+    thetas = ParameterVector("theta", num_qubits * layers)
+
+    for layer in range(layers):
+        for qubit in range(num_qubits):
+            qc.ry(thetas[layer * num_qubits + qubit], qubit)
+        for qubit in range(num_qubits - 1):
+            qc.cx(qubit, qubit + 1)
+        if num_qubits > 1:
+            qc.cx(num_qubits - 1, 0)
+        if layer < layers - 1:
+            qc.barrier()
+
+    return qc
 
 
-def decode_solution(xvec, pois, n_slots, base_camp=0):
-    slots = list(range(1, n_slots + 1))
+def decode_solution(xvec, pois, slots, base_camp=0):
     var_names = [f"x_{i}_{p}" for i in pois for p in slots]
     sol = {name: int(round(val)) for name, val in zip(var_names, xvec)}
-    route_pois = []
+
+    route = [base_camp]
     for p in slots:
-        chosen = next((i for i in pois if sol.get(f"x_{i}_{p}") == 1), None)
-        route_pois.append(chosen)
-    return [base_camp] + route_pois + [base_camp]
-
-
-def route_info(route, locations, base_camp, base_altitude, season):
-    lines = []
-    for idx, node in enumerate(route):
-        if node == base_camp:
-            lines.append(f"  Base camp (Benasque, {base_altitude} m)")
-        else:
-            name = locations[node][0]
-            alt = altitude(node, locations)
-            req = locations[node][3 if season == "summer" else 4]
-            refugio = (
-                " [REFUGIO — overnight possible]" if is_refugio(node, locations) else ""
-            )
-            lines.append(
-                f"  Slot {idx}: POI {node}: {name} ({alt} m)"
-                f" — needs {req} gear{refugio}"
-            )
-    return "\n".join(lines)
+        chosen = next((i for i in pois if sol.get(f"x_{i}_{p}", 0) == 1), None)
+        route.append(chosen)
+    route.append(base_camp)
+    return route
 
 
 def total_hike_time(route, visit_time, distance_fn, base_camp=0):
@@ -268,59 +282,43 @@ def effective_budget(route, t_max, t_max_refugio, locations):
     return t_max
 
 
-def print_result(label, result, data):
-    penalties = data["penalties"]
-    route = decode_solution(
-        result.x,
-        data["pois"],
-        data["n_slots"],
-        base_camp=data["base_camp"],
-    )
-    distance_fn = make_distance_fn(
-        data["travel_time"], data["pois"], base_camp=data["base_camp"]
-    )
-    hike_time = total_hike_time(
-        route,
-        data["visit_time"],
-        distance_fn,
-        base_camp=data["base_camp"],
-    )
-    budget = effective_budget(
-        route,
-        penalties["T_MAX"],
-        penalties["T_MAX_REFUGIO"],
-        data["locations"],
-    )
+def route_info(route, locations, base_camp, base_altitude, season):
+    lines = []
+    for idx, node in enumerate(route):
+        if node == base_camp:
+            lines.append(f"  Base camp (Benasque, {base_altitude} m)")
+        else:
+            name = locations[node][0]
+            alt = altitude(node, locations)
+            req = locations[node][3 if season == "summer" else 4]
+            refugio = (
+                " [REFUGIO — overnight possible]" if is_refugio(node, locations) else ""
+            )
+            lines.append(
+                f"  Slot {idx}: POI {node}: {name} ({alt} m)"
+                f" — needs {req} gear{refugio}"
+            )
+    return "\n".join(lines)
 
-    print(f"\n{'─' * 55}")
-    print(f"  Solver : {label}")
-    print(f"  Cost   : {result.fval:.2f}")
-    print(
-        "  Route  :\n"
-        + route_info(
-            route,
-            data["locations"],
-            data["base_camp"],
-            data["base_altitude"],
-            data["season"],
-        )
-    )
 
-    if not np.isnan(hike_time):
-        budget_ok = (
-            f"✓ within {budget:.0f} h budget"
-            if hike_time <= budget
-            else f"✗ OVER {budget:.0f} h BUDGET"
+def print_summary(solver_results: dict) -> None:
+    print("\n" + "═" * 60)
+    print("  SUMMARY")
+    print("═" * 60)
+    for solver, res in solver_results.items():
+        route_str = " → ".join(
+            "Base" if n == 0 else str(n) for n in res.get("route", [])
         )
-        print(f"  Time   : {hike_time:.1f} h  ({budget_ok})")
-    else:
-        print("  Time   : N/A (incomplete route)")
+        print(
+            f"  {solver:<16} cost={res['fval']:>10.4f}  "
+            f"time={res['elapsed_s']:>7.1f}s  route=[{route_str}]"
+        )
+    print("═" * 60)
 
 
 def print_configuration(data):
     penalties = data["penalties"]
     gear_name = [k for k, v in data["gear_level"].items() if v == data["user_gear"]][0]
-
     print(f"\n{'─' * 55}")
     print("Configuration:")
     print(f"  N_SLOTS               = {data['n_slots']}")
@@ -334,25 +332,26 @@ def print_configuration(data):
     )
     print(f"  D (gear mismatch)     = {penalties['D']}")
     print(
-        "  E (time budget)       = "
-        f"{penalties['E']}  [normal: {penalties['T_MAX']} h, refugio: {penalties['T_MAX_REFUGIO']} h]"
+        f"  E (time budget)       = {penalties['E']}"
+        f"  [normal: {penalties['T_MAX']} h, refugio: {penalties['T_MAX_REFUGIO']} h]"
     )
     print(f"  F (Snow↔Mountain ban) = {penalties['F']}  [hard constraint]")
 
 
-def run_optimizer(data=None, reps=2, maxiter=300):
-    if data is None:
-        data = default_problem_data()
+def save_json(data: dict, path: str) -> None:
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
 
-    qp = build_qubo(data)
-    exact_result, qaoa_result = solve_exact_and_qaoa(qp, reps=reps, maxiter=maxiter)
 
-    print_result("EXACT (NumPy)", exact_result, data)
-    print_result(f"QAOA  (reps={reps})", qaoa_result, data)
-    print_configuration(data)
+def enrich_with_routes(solver_results: dict, pois: list, slots: list) -> dict:
+    """Decode and attach the route list to every entry in solver_results."""
+    for key, res in solver_results.items():
+        res["route"] = decode_solution(res["x"], pois=pois, slots=slots, base_camp=0)
+    return solver_results
 
-    return {
-        "quadratic_program": qp,
-        "exact_result": exact_result,
-        "qaoa_result": qaoa_result,
-    }
+
+def make_backend_sampler(backend, shots: int) -> BackendSamplerV2:
+    sampler = BackendSamplerV2(backend=backend)
+    sampler.options.default_shots = shots
+    return sampler
