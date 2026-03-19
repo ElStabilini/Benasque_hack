@@ -79,7 +79,7 @@ op, _ = qubo_problem.to_ising()
 num_qubits = op.num_qubits
 
 # Set up quantum backend and sampler
-backend = QmioBackend()
+backend = QmioBackend(reservation_name="Benasque_QPU")
 shots = 1000
 sampler = make_backend_sampler(backend, shots=shots)
 
