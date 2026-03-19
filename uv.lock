@@ -175,6 +175,7 @@ dependencies = [
     { name = "qiskit-aer" },
     { name = "qiskit-ibm-runtime" },
     { name = "qiskit-nature-pyscf" },
+    { name = "qiskit-optimization" },
     { name = "qiskit-quantuminspire" },
     { name = "quantuminspire" },
     { name = "scienceplots" },
@@ -199,6 +200,7 @@ requires-dist = [
     { name = "qiskit-aer" },
     { name = "qiskit-ibm-runtime", specifier = ">=0.45.1" },
     { name = "qiskit-nature-pyscf", specifier = ">=0.4.0" },
+    { name = "qiskit-optimization", specifier = ">=0.7.0" },
     { name = "qiskit-quantuminspire", specifier = ">=0.15.0" },
     { name = "quantuminspire", specifier = ">=3.5.1" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.12" },
@@ -528,6 +530,17 @@ wheels = [
 ]
 
 [[package]]
+name = "docplex"
+version = "2.32.262"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "hashable-list" },
+    { name = "ordered-set" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6c/f3/2ad279d3ef0008e7fa5f16c92d5d7b4b400f7f09843c30fd585e1f8bd9d8/docplex-2.32.262.tar.gz", hash = "sha256:02b879545c807b03f748a0079857225237cfd69bfa79151951163530037b6047", size = 660021, upload-time = "2026-03-19T10:52:03.405Z" }
+
+[[package]]
 name = "duet"
 version = "0.2.9"
 source = { registry = "https://pypi.org/simple" }
@@ -693,6 +706,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/41/8c/bbe98f813722b4873818a8db3e15aa3e625b59278566905ac439725e8070/h5py-3.16.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:346df559a0f7dcb31cf8e44805319e2ab24b8957c45e7708ce503b2ec79ba725", size = 5300253, upload-time = "2026-03-06T13:49:02.033Z" },
     { url = "https://files.pythonhosted.org/packages/32/9e/87e6705b4d6890e7cecdf876e2a7d3e40654a2ae37482d79a6f1b87f7b92/h5py-3.16.0-cp314-cp314t-win_amd64.whl", hash = "sha256:4c6ab014ab704b4feaa719ae783b86522ed0bf1f82184704ed3c9e4e3228796e", size = 3381671, upload-time = "2026-03-06T13:49:04.351Z" },
     { url = "https://files.pythonhosted.org/packages/96/91/9fad90cfc5f9b2489c7c26ad897157bce82f0e9534a986a221b99760b23b/h5py-3.16.0-cp314-cp314t-win_arm64.whl", hash = "sha256:faca8fb4e4319c09d83337adc80b2ca7d5c5a343c2d6f1b6388f32cfecca13c1", size = 2740706, upload-time = "2026-03-06T13:49:06.347Z" },
+]
+
+[[package]]
+name = "hashable-list"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/86/43/022932004ae4feb0f800683899530e41de35ce31bc570333a63cec145e3e/hashable_list-0.2.0.tar.gz", hash = "sha256:111b6b7b43826379924a28feb8038aa3e1120788d66b263dfb846b333cce3d55", size = 3474, upload-time = "2024-06-21T17:06:50.392Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f9/50/c34966207b3fc16b22da1ccb22f314600c0ff51aca34c601a02d5f55df6a/hashable_list-0.2.0-py3-none-any.whl", hash = "sha256:90cb878017adfb9a548ce7d02b0095211290f3bdf0d3970936b384db4879582a", size = 4245, upload-time = "2024-06-21T17:06:49.202Z" },
 ]
 
 [[package]]
@@ -1064,6 +1086,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/62/9a/2ab0d8ee111ea2a948e344bcd7f998aea9160393f22bf0de7b552b5a1b33/opensquirrel-0.8.0.tar.gz", hash = "sha256:18197cc251fe5faaa0e78d3f77b07ed68e50504a1434d155016dd421ec7d81e9", size = 48735, upload-time = "2025-11-03T07:13:35.809Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e6/29/015547e34b03dd65ee52315a34625040deb59e26a4b407d6d6bca250e716/opensquirrel-0.8.0-py3-none-any.whl", hash = "sha256:8d0d2913c0f7d6a217e7126c75118cc10379d61cd5cf73ea075c7d01319fcde3", size = 74919, upload-time = "2025-11-03T07:13:34.314Z" },
+]
+
+[[package]]
+name = "ordered-set"
+version = "4.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/ca/bfac8bc689799bcca4157e0e0ced07e70ce125193fc2e166d2e685b7e2fe/ordered-set-4.1.0.tar.gz", hash = "sha256:694a8e44c87657c59292ede72891eb91d34131f6531463aab3009191c77364a8", size = 12826, upload-time = "2022-01-26T14:38:56.6Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/33/55/af02708f230eb77084a299d7b08175cff006dea4f2721074b92cdb0296c0/ordered_set-4.1.0-py3-none-any.whl", hash = "sha256:046e1132c71fcf3330438a539928932caf51ddbc582496833e23de611de14562", size = 7634, upload-time = "2022-01-26T14:38:48.677Z" },
 ]
 
 [[package]]
@@ -1736,6 +1767,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/4b/56/8550c157ecb66e0b999c53c4ad4568ba3539f93dbe3d2740ce9e233af1f3/qiskit-nature-pyscf-0.4.0.tar.gz", hash = "sha256:6a2440ecf5992006f04f571e5f8ea2b1c44702733e9bb8a1a9d36545bd0c981a", size = 17688, upload-time = "2024-02-23T13:38:34.044Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d2/f8/4c6bf854ef1cd6baaa3b167ede4094af74f1e5487c597230e69a17c14d1a/qiskit_nature_pyscf-0.4.0-py3-none-any.whl", hash = "sha256:833910cca49dc625d432fd01068185dbca5da27a54db9a0f1f7263f172bb533b", size = 15841, upload-time = "2024-02-23T13:38:31.904Z" },
+]
+
+[[package]]
+name = "qiskit-optimization"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docplex" },
+    { name = "networkx" },
+    { name = "numpy" },
+    { name = "qiskit" },
+    { name = "scipy" },
+    { name = "setuptools" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c9/e0/46e635e6d447f08ef9d9b2e89d129454ec2db3a2327237cea2bd3e8c4878/qiskit_optimization-0.7.0.tar.gz", hash = "sha256:059e9329c647534965e68d8c52de1b02828635c525c210aa0730e486f9c5a686", size = 219471, upload-time = "2025-08-20T14:04:16.96Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/a1/78908508b73f0e9f638abeace753c07439f92d3eb2fda36706f8e08e73d6/qiskit_optimization-0.7.0-py3-none-any.whl", hash = "sha256:2082390c2b89cdf2083f6f790486797a0e188016e0dd31c8a32b27f6913864dc", size = 237135, upload-time = "2025-08-20T14:04:15.478Z" },
 ]
 
 [[package]]
