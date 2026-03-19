@@ -5,6 +5,7 @@ It creates a dict representation of the adjacency matrix as:
 
 Prepare the adjacency matrix with penalties 100 for unconnected
 
+    prepare_adjacency_matrix(max_gear="Urban", time="Summer")
 
 It gives a way to generate the adjacency matrix given the dict
 
