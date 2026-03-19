@@ -3,6 +3,9 @@ This module imports the dataframe (excel) and loads data.
 It creates a dict representation of the adjacency matrix as:
 {place_i: {neighbour_1: cost_1, neighbour_2: cost_2, ...}, ...}
 
+Prepare the adjacency matrix with penalties 100 for unconnected
+
+
 It gives a way to generate the adjacency matrix given the dict
 
     generate_adjacency_matrix(ClassicalPreprocessing.adjacency_matrix)
@@ -15,6 +18,9 @@ And a way to reindex the limited adjacency which is required to make its adj. ma
 
     relabeled_filt_dict, relabeling = reindex_dict(filtered_dict)
 
+And a way to draw them with
+
+    draw_benasque_graph(adjacency_dict)
 """
 
 import numpy as np
@@ -142,6 +148,8 @@ def draw_benasque_graph(adjacency_dict):
         nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels)
 
     draw_graph(G, colors, pos)
+    
+    plt.show()
 
 
 
@@ -190,3 +198,22 @@ def reindex_dict(adjacency_dict):
 
 # print(generate_adjacency_matrix(reindex_dict(filtered_adjacency)[0]))
 # draw_benasque_graph(filtered_adjacency)
+
+
+
+def generate_adjacency_matrix_hours_penalized(adjacency_dict):
+    Nplaces = len(adjacency_dict)
+    adjacency_matrix = np.zeros((Nplaces,Nplaces), dtype=np.float32)
+
+    for i in range(Nplaces):
+        for j in range(i, Nplaces):
+            adjacency_matrix[i,j] = adjacency_dict[i+1].get(j+1,100*60)/60
+            adjacency_matrix[j,i] = adjacency_dict[i+1].get(j+1,100*60)/60
+
+    return adjacency_matrix
+
+
+def prepare_adjacency_matrix(max_gear="Urban", time="Summer"):
+    filtered_adjacency = limited_adjacency(adjacency_dict, max_gear=max_gear, time=time)
+    filtered_adjacency, relabeling  = reindex_dict(filtered_adjacency)
+    return generate_adjacency_matrix_hours_penalized(filtered_adjacency), {new-1: old for old, new in relabeling.items()}
