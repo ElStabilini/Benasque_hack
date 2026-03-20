@@ -214,7 +214,30 @@ def generate_adjacency_matrix_hours_penalized(adjacency_dict):
     return adjacency_matrix
 
 
-def prepare_adjacency_matrix(max_gear="Urban", time="Summer"):
+def remove_trailess_nodes(adjacency_dict):
+    # Identify nodes with no edges
+    new_dict = adjacency_dict.copy()
+    nodes_to_remove = [node for node, neighbors in new_dict.items() if (not neighbors or all(weight == 0 for weight in neighbors.values()))]
+    
+    # Remove those nodes from the adjacency dictionary
+    # print(nodes_to_remove)
+    for node in nodes_to_remove:
+        for parent_node in new_dict:
+            if node in new_dict[parent_node]:
+                del new_dict[parent_node][node]
+        del new_dict[node]
+
+    # print(new_dict)
+    
+    return new_dict
+
+
+
+def prepare_adjacency_matrix(max_gear="Urban", time="Summer", remove_trailess=False):
     filtered_adjacency = limited_adjacency(adjacency_dict, max_gear=max_gear, time=time)
+    if remove_trailess:
+        filtered_adjacency = remove_trailess_nodes(filtered_adjacency)
+    draw_benasque_graph(filtered_adjacency)
     filtered_adjacency, relabeling  = reindex_dict(filtered_adjacency)
     return generate_adjacency_matrix_hours_penalized(filtered_adjacency), {new-1: old for old, new in relabeling.items()}
+
