@@ -170,6 +170,7 @@ dependencies = [
     { name = "mitiq" },
     { name = "numpy" },
     { name = "pennylane-quantuminspire" },
+    { name = "physics-tenpy" },
     { name = "ply" },
     { name = "qiskit" },
     { name = "qiskit-aer" },
@@ -195,6 +196,7 @@ requires-dist = [
     { name = "mitiq", specifier = ">=0.49.0" },
     { name = "numpy" },
     { name = "pennylane-quantuminspire", specifier = ">=0.4.1" },
+    { name = "physics-tenpy", specifier = ">=1.1.0" },
     { name = "ply", specifier = ">=3.11" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.3.0" },
     { name = "qiskit" },
@@ -1220,6 +1222,26 @@ dependencies = [
     { name = "quantuminspire" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/60/9a/0ef4318699939523c747c20b3af050dd4b31bac42d182c88921d00112163/pennylane-quantuminspire-0.4.1.tar.gz", hash = "sha256:718053e95898dd72a602736b762a91092dcec0ceafe4e9790bc7fe440063e2da", size = 15404, upload-time = "2023-04-04T09:40:08.385Z" }
+
+[[package]]
+name = "physics-tenpy"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5c/0e/aaa867c8b2c9af25d6a9e084584048ff8e26ba9987dfba26d816e84c4c7c/physics_tenpy-1.1.0.tar.gz", hash = "sha256:dd9001d387c0b12ab34da29a5874a406b3c7a38d0513c7dcbfb8d41df0db446b", size = 1043400, upload-time = "2025-11-12T00:29:19.715Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/99/62/f93b381a41519bc402e97d75f08d7984dbb3ae00b241c075843f741b17ab/physics_tenpy-1.1.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:579652ecf90cdb438965702f9538b1a94be818ce9c9b6247dd526a4b7757db86", size = 1201652, upload-time = "2025-11-12T00:29:01.409Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/52/d4c719b2b27cf6d38596f3f23b190013192a6a7a98eb70eccfaf4d7ac8ae/physics_tenpy-1.1.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:220c1a2b57d7b9ce2a6bca0135c5dd643182b173d039cc826e065cfec0e7564b", size = 1176657, upload-time = "2025-11-12T00:29:02.801Z" },
+    { url = "https://files.pythonhosted.org/packages/48/cc/0e84eab473cb773a1baab16efff7d2802dde11e31cef60d8b7e1ace69d92/physics_tenpy-1.1.0-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2ce6765ef999d29812cce12a4b1301e288d1b9138163994e3e7e91853f3b4785", size = 2620852, upload-time = "2025-11-12T00:29:04.252Z" },
+    { url = "https://files.pythonhosted.org/packages/48/4e/3152e1f75c550a75ae6c37ecd90d36440ccf9a792d40b7432630e62d9b21/physics_tenpy-1.1.0-cp313-cp313-win_amd64.whl", hash = "sha256:68e2d25765241c17a438ceef60cc5aeb6a4edf4d1cdcc0c11cb045e3ea861515", size = 1156899, upload-time = "2025-11-12T00:29:06.024Z" },
+    { url = "https://files.pythonhosted.org/packages/f4/6a/ad41ba3a2b39c8efbf8c9ef8dd1500d4f111330155c770ddbbcca2b380af/physics_tenpy-1.1.0-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:57ec2e3183fc4b4f873609137fc677dc0108a262ae03a4f55403bf3106f78f15", size = 1210141, upload-time = "2025-11-12T00:29:07.419Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/05/41afded6e0782c215e279af55b330b21d0e310d47f591e532fb15ae24b71/physics_tenpy-1.1.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:0743ce1526dd1e4aec1ff6ae6cfdaf83a1c082ed0c2511d1f5f51a0ac6a9dcc2", size = 1186726, upload-time = "2025-11-12T00:29:08.888Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/c3/f1bfaa7fa99e93650a61f3eeb7caeb79f03b1d1a8c3a1bcfe0f5a7fd0290/physics_tenpy-1.1.0-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:dcb305e667c204cc5728bfb80d0eadc5ecf7dbb553edf32d6b1d0d90313cab96", size = 2606300, upload-time = "2025-11-12T00:29:10.343Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/21/d21a5ef29216d5f9c4f506c1479315f2920ad45b92d34847e7cf3c234c24/physics_tenpy-1.1.0-cp314-cp314-win_amd64.whl", hash = "sha256:ce56b9d2b4ee66d6b1de93fea41f7070c1c78f070e1e4aefd2a7f018e3e816e4", size = 1167731, upload-time = "2025-11-12T00:29:12.946Z" },
+]
 
 [[package]]
 name = "pillow"
